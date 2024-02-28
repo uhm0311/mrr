@@ -371,8 +371,67 @@ exit:
 int
 main(int argc, char *argv[])
 {
+  char buffer[4096];
   struct sockaddr_in addr;
   int so;
+
+#ifdef __linux__
+  struct tcp_info info;
+  socklen_t size = sizeof(info);
+#endif
+#ifdef __APPLE__
+  struct tcp_connection_info info;
+  socklen_t size = sizeof(info);
+#endif
+
+  memset(&addr, 0, sizeof(addr));
+  if (0 != filladdr("127.0.0.1", &addr)) {
+    ERROR_DIE("filladdr\n");
+  }
+  addr.sin_port = htons(11211);
+
+  so = socket(AF_INET, SOCK_STREAM, 0);
+  if (so < 0) {
+    PERROR_DIE("socket");
+  }
+  if (0 != connect(so, (struct sockaddr*)&addr, sizeof(addr))) {
+    PERROR_DIE("connect");
+  }
+
+  memset(buffer, 0, 4096);
+  write(so, "version\r\n", sizeof("version\r\n"));
+  read(so, buffer, 4096);
+
+  printf("%s\n", buffer);
+
+  uint64_t failed = 0;
+  uint64_t loop = 1000000;
+  uint32_t million = 1000000;
+
+  struct timeval tv;
+  double start, end;
+
+  gettimeofday(&tv, NULL);
+  start = (tv.tv_sec) * million + (tv.tv_usec);
+  for (uint64_t k = 0; k < loop; k++) {
+#ifdef __linux__
+    if (0 != getsockopt(so, IPPROTO_TCP, TCP_INFO, &info, &size)) {
+      failed++;
+    }
+#endif
+#ifdef __APPLE__
+    if (0 != getsockopt(so, IPPROTO_TCP, TCP_CONNECTION_INFO, &info, &size)) {
+      failed++;
+    }
+#endif
+  }
+  gettimeofday(&tv, NULL);
+  end = (tv.tv_sec) * million + (tv.tv_usec);
+
+  printf("Execution time %.10lf us for looping %llu count.\n", (end - start), loop);
+  printf("Execution time %.10lf us for average per loop\n", ((end - start)) / loop);
+  printf("Failed: %llu\n", failed);
+  return 0;
 
   parse_args(argc, argv);
 
