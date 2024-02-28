@@ -407,13 +407,14 @@ main(int argc, char *argv[])
   uint64_t failed = 0;
   uint64_t loop = 1000000;
   uint32_t million = 1000000;
+  uint64_t k = 0;
 
   struct timeval tv;
   double start, end;
 
   gettimeofday(&tv, NULL);
   start = (tv.tv_sec) * million + (tv.tv_usec);
-  for (uint64_t k = 0; k < loop; k++) {
+  for (k = 0; k < loop; k++) {
 #ifdef __linux__
     if (0 != getsockopt(so, IPPROTO_TCP, TCP_INFO, &info, &size)) {
       failed++;
@@ -428,9 +429,9 @@ main(int argc, char *argv[])
   gettimeofday(&tv, NULL);
   end = (tv.tv_sec) * million + (tv.tv_usec);
 
-  printf("Execution time %.10lf us for looping %llu count.\n", (end - start), loop);
+  printf("Execution time %.10lf us for looping %lu count.\n", (end - start), loop);
   printf("Execution time %.10lf us for average per loop\n", ((end - start)) / loop);
-  printf("Failed: %llu\n", failed);
+  printf("Failed: %lu\n", failed);
   return 0;
 
   parse_args(argc, argv);
