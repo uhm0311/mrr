@@ -305,18 +305,19 @@ rr_thread(void *arg)
           }
         }
       }
-      s = write(r->so, r->buf, msg_len);
+      /*s = write(r->so, r->buf, msg_len);
       if (s != msg_len) {
         log_msg("%d: write failed. s=%d msg_len=%d error=%s(%d). stopping\n",
           r->id, s, msg_len, strerror(errno), errno);
         goto exit;
-      }
+      }*/
     }
   }
   else {
     memset(r->buf, 0, sizeof(r->buf));
+    strcpy(r->buf, "testtesttest");
     while (1) {
-      int s, rem;
+      int s; //, rem;
       uint64_t msec;
       char *buf;
 
@@ -335,7 +336,7 @@ rr_thread(void *arg)
         goto exit;
       }
 
-      rem = r->msg_len;
+      /*rem = r->msg_len;
       while (rem > 0) {
         s = read(r->so, r->buf+r->msg_len-rem, rem);
         if (s > 0)
@@ -349,7 +350,7 @@ rr_thread(void *arg)
           log_msg("%d: read returns eof. stopping\n", r->id);
           goto exit;
         }
-      }
+      }*/
       r->stat_count++;
       msec = getmsec() - msec;
       hist_inc(&r->hist, (uint32_t)msec);
